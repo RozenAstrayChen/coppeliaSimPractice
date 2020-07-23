@@ -1,7 +1,7 @@
 import time
 import math
 import sys
-sys.path.append('../RemoteAPIs')
+sys.path.append('./RemoteAPIs')
 
 ''' Inverse kinematics '''
 
