@@ -26,10 +26,13 @@ def chassisInverseKinematics(vx, vy, omega, wheel_R, a, b):
 
 
 def VREP_armControl(vrep_sim, clientID, arm_joints_handle, desired_arm_joint_angles):
+    result_joint = [-1, -1, -1, -1, -1] 
     for i in range(0, 5):
         vrep_sim.simxSetJointPosition(clientID, arm_joints_handle[i], desired_arm_joint_angles[i],
                                       vrep_sim.simx_opmode_blocking)
-
+        _, result_joint[i] = vrep_sim.simxGetObjectHandle(clientID, 'youBotArmJoint' + str(i), vrep_sim.simx_opmode_blocking)
+    #print('joint ', arm_joints_handle)
+    print('desired ', desired_arm_joint_angles)
 
 ''' Wheels control function of youBot '''
 
@@ -38,6 +41,7 @@ def VREP_wheelsControl(vrep_sim, clientID, wheel_joints_handle, desired_wheel_ve
     for i in range(0, 4):
         vrep_sim.simxSetJointTargetVelocity(clientID, wheel_joints_handle[i], desired_wheel_velocities[i],
                                             vrep_sim.simx_opmode_blocking)
+
 
 
 if __name__ == '__main__':
@@ -92,18 +96,20 @@ if __name__ == '__main__':
 
         # Prepare initial values for five arm joints
         arm_joints_handle = [-1, -1, -1, -1, -1]
-        for i in range(0, 4):
+        for i in range(0, 5):
             return_code, arm_joints_handle[i] = vrep_sim.simxGetObjectHandle(clientID, 'youBotArmJoint' + str(i),
                                                                              vrep_sim.simx_opmode_blocking)
             if (return_code == vrep_sim.simx_return_ok):
                 print('get object arm joint ' + str(i) + ' ok.')
 
+
+        print('init arm_joints_handle:', arm_joints_handle)
         # Desired joint positions for initialization
         desired_arm_joint_angles = [180 * math.pi / 180, 30.91 * math.pi / 180, 52.42 * math.pi / 180,
                                     72.68 * math.pi / 180, 0]
-
+        #print('desired arm joint angle: ', desired_arm_joint_angles)
         # Initialization all arm joints
-        for i in range(0, 4):
+        for i in range(0, 5):
             vrep_sim.simxSetJointPosition(clientID, arm_joints_handle[i], desired_arm_joint_angles[i],
                                           vrep_sim.simx_opmode_blocking)
     else:
@@ -124,13 +130,13 @@ if __name__ == '__main__':
     while True:
         # Motion planning
         simu_time = simu_time + 0.05
-
+        
         for i in range(0, 5):
             if int(simu_time) % 2 == 0:
                 desired_arm_joint_angles[i] = desired_arm_joint_angles[i] - 0.04  # rad
             else:
                 desired_arm_joint_angles[i] = desired_arm_joint_angles[i] + 0.04  # rad
-
+        
         # Control the youBot robot
         VREP_armControl(vrep_sim, clientID, arm_joints_handle, desired_arm_joint_angles)
         VREP_wheelsControl(vrep_sim, clientID, wheel_joints_handle, desired_wheel_velocities)
