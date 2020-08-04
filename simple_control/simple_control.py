@@ -1,7 +1,7 @@
 import time
 import math
 import sys
-sys.path.append('../RemoteAPIs')
+import RemoteAPIs.vrep as vrep_sim
 
 ''' Inverse kinematics '''
 
@@ -45,16 +45,6 @@ def VREP_wheelsControl(vrep_sim, clientID, wheel_joints_handle, desired_wheel_ve
 
 
 if __name__ == '__main__':
-    try:
-        import sim as vrep_sim
-    except:
-        print('--------------------------------------------------------------')
-        print('"sim.py" could not be imported. This means very probably that')
-        print('either "sim.py" or the remoteApi library could not be found.')
-        print('Make sure both are in the same folder as this file,')
-        print('or appropriately adjust the file "sim.py"')
-        print('--------------------------------------------------------------')
-        print('')
 
     ''' Initialization '''
     print('Program started')
