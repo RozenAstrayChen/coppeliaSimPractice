@@ -2,10 +2,11 @@ import RemoteAPIs.vrep as vrep
 import math
 import numpy as np
 import random
+
 class BoTControl(object):
     def __init__(self, bot_name, joint_name, joint_num):
         print('init control')
-        vrep.simxFinish(-1) # close all open connected
+        vrep.simxFinish(-1)  # close all open connected
         self.client_id = 0
         self.bot = 0
         self.RAD2EDG = 180/math.pi
@@ -16,6 +17,7 @@ class BoTControl(object):
         self.joint_handle = np.zeros((joint_num,))
         self.joint_pos = np.zeros((joint_num,))
         self.simu_time = 0
+
     def connect(self, ip, port):
         '''
         Connect to server
@@ -34,7 +36,8 @@ class BoTControl(object):
         vrep.simxSynchronous(self.client_id, True)
         vrep.simxStartSimulation(self.client_id, vrep.simx_opmode_oneshot)
 
-        return self.client_id if self.client_id!= -1 else -1
+        return self.client_id if self.client_id != -1 else -1
+
     def connect_bot(self, ip, port):
         '''
         Connect to Bot
@@ -43,8 +46,9 @@ class BoTControl(object):
         :param botName:
         :return:
         '''
-        if self.connect(ip, port)!= -1:
-            ret_code, self.bot = vrep.simxGetObjectHandle(self.client_id, self.bot_name, vrep.simx_opmode_blocking)
+        if self.connect(ip, port) != -1:
+            ret_code, self.bot = vrep.simxGetObjectHandle(
+                self.client_id, self.bot_name, vrep.simx_opmode_blocking)
             return 0 if(ret_code == vrep.simx_return_ok) else -1
         return -1
 
@@ -52,7 +56,8 @@ class BoTControl(object):
         print('get joint handle')
         for i in range(self.joint_num):
             _, joint_handle = vrep.simxGetObjectHandle(self.client_id,
-                                                       self.joint_name+str(i+1),
+                                                       self.joint_name +
+                                                       str(i+1),
                                                        mode)
             print(self.joint_name+str(i+1), " : ", joint_handle)
             self.joint_handle[i] = joint_handle
@@ -60,10 +65,10 @@ class BoTControl(object):
 
     def get_joint_position(self, mode=vrep.simx_opmode_streaming):
         for i in range(self.joint_num):
-            #print(self.joint_handle[i])
+            # print(self.joint_handle[i])
             _, joint_pos = vrep.simxGetJointPosition(self.client_id,
-                                                    int(self.joint_handle[i]),
-                                                    mode)
+                                                     int(self.joint_handle[i]),
+                                                     mode)
             #self.joint_pos[i] = round((joint_pos*self.RAD2EDG), 2)
             self.joint_pos[i] = joint_pos
         print(self.joint_handle[i], " : ", self.joint_pos)
@@ -95,7 +100,7 @@ class BoTControl(object):
         :return:
         '''
         self.get_joint_handle()
-        #self.get_joint_position()
+        # self.get_joint_position()
         while True:
             self.simu_time = self.simu_time + self.tstep
             self.set_joint_position()
