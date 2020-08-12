@@ -3,6 +3,7 @@ import math
 import numpy as np
 import random
 
+
 class BoTControl(object):
     def __init__(self, bot_name, joint_name, joint_num):
         print('init control')
@@ -14,7 +15,7 @@ class BoTControl(object):
         self.bot_name = bot_name
         self.joint_num = joint_num
         self.joint_name = joint_name
-        self.joint_handle = np.zeros((joint_num,))
+        self.joint_handle = np.zeros((joint_num,), dtype=np.int)
         self.joint_pos = np.zeros((joint_num,))
         self.simu_time = 0
 
@@ -46,15 +47,16 @@ class BoTControl(object):
         :param botName:
         :return:
         '''
-        if self.connect(ip, port) != -1:
-            ret_code, self.bot = vrep.simxGetObjectHandle(
-                self.client_id, self.bot_name, vrep.simx_opmode_blocking)
-            return 0 if(ret_code == vrep.simx_return_ok) else -1
-        return -1
+        self.get_joint_handle()
+        ret_code, self.bot = vrep.simxGetObjectHandle(self.client_id,
+                                                      self.bot_name,
+                                                      vrep.simx_opmode_blocking)
+        print('connect bot result', ret_code)
 
     def get_joint_handle(self, mode=vrep.simx_opmode_blocking):
         print('get joint handle')
         for i in range(self.joint_num):
+
             _, joint_handle = vrep.simxGetObjectHandle(self.client_id,
                                                        self.joint_name +
                                                        str(i+1),
@@ -65,30 +67,22 @@ class BoTControl(object):
 
     def get_joint_position(self, mode=vrep.simx_opmode_streaming):
         for i in range(self.joint_num):
-            # print(self.joint_handle[i])
-            _, joint_pos = vrep.simxGetJointPosition(self.client_id,
-                                                     int(self.joint_handle[i]),
-                                                     mode)
-            #self.joint_pos[i] = round((joint_pos*self.RAD2EDG), 2)
-            self.joint_pos[i] = joint_pos
-        print(self.joint_handle[i], " : ", self.joint_pos)
+
+            err, j_pos = vrep.simxGetJointPosition(self.client_id,
+                                                   self.joint_handle[i],
+                                                   mode)
+            print(err, round((j_pos*self.RAD2EDG), 2))
+            self.joint_pos[i] = j_pos
 
         return self.joint_pos
 
-    def set_joint_position(self, position=None, mode=vrep.simx_opmode_oneshot):
-        self.get_joint_position()
+    def set_joint_position(self, mode=vrep.simx_opmode_oneshot):
         # sync pasuse
         vrep.simxPauseCommunication(self.client_id, True)
         for i in range(self.joint_num):
-            # test
-            if int(self.simu_time) % 2 == 0:
-                rand = random.uniform(0.1, 0.4)
-            else:
-                rand = random.uniform(-0.1, 0.4)
-
             vrep.simxSetJointPosition(self.client_id,
-                                      int(self.joint_handle[i]),
-                                      float(self.joint_pos[i])+rand,
+                                      self.joint_handle[i],
+                                      120/self.RAD2EDG,
                                       mode)
         vrep.simxPauseCommunication(self.client_id, False)
 
@@ -99,13 +93,22 @@ class BoTControl(object):
         :param desired_joint:
         :return:
         '''
-        self.get_joint_handle()
-        # self.get_joint_position()
-        while True:
-            self.simu_time = self.simu_time + self.tstep
+        last_cmd_time = vrep.simxGetLastCmdTime(self.client_id)
+        vrep.simxSynchronousTrigger(self.client_id)
+        while vrep.simxGetConnectionId(self.client_id) != -1:
+            curr_cmd_time = vrep.simxGetLastCmdTime(self.client_id)
+            dt = curr_cmd_time - last_cmd_time
+
+            self.get_joint_position()
             self.set_joint_position()
 
+            last_cmd_time = curr_cmd_time
+            vrep.simxSynchronousTrigger(self.client_id)
+            vrep.simxGetPingTime(self.client_id)
 
-boTControl = BoTControl('IRB4600', 'IRB4600_joint', 6)
+
+boTControl = BoTControl('IRB4600', 'IRB4600', 6)
+err = boTControl.connect('127.0.0.1', 19999)
 err = boTControl.connect_bot('127.0.0.1', 19999)
+boTControl.get_joint_position()
 boTControl.simple_test()
