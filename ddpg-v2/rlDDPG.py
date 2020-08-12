@@ -21,7 +21,7 @@ import math
 import tensorflow as tf
 import numpy as np
 import time
-import vrep
+import RemoteAPIs.vrep as vrep
 import matplotlib.pyplot as plt
 import os
 import shutil
