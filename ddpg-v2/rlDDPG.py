@@ -330,6 +330,7 @@ def step(action, lineNum):
     # from the buffer retrieve the information which involves the velocity, angle, reward ,and the terminated state
     error, next_angle = vrep.simxGetFloatSignal(clientID, "angle",
                                                 vrep.simx_opmode_buffer)
+    print(error, next_angle)
     error, next_velocity = vrep.simxGetFloatSignal(clientID, "velocity",
                                                    vrep.simx_opmode_buffer)
     error, reward = vrep.simxGetFloatSignal(clientID, "reward",
